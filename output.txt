@@ -1,0 +1,52 @@
+============================================================
+HTLC Atomic Swap Simulation
+============================================================
+
+[SETUP]
+Secret (preimage): alice_secret_preimage
+Secret Hash (SHA256): 89b164ac8ed7f7d0e1172426485cc550f5b2b3aec758a2cd2b7dd3746b615a1f
+
+[HTLC LOCKING SCRIPT]
+
+    OP_IF
+        # Alice's claim path (with secret preimage)
+        OP_SHA256 <89b164ac8ed7f7d0e1172426485cc550f5b2b3aec758a2cd2b7dd3746b615a1f> OP_EQUALVERIFY
+        OP_DUP OP_HASH160 <alice_pubkeyhash_abc123> OP_EQUALVERIFY OP_CHECKSIG
+    OP_ELSE
+        # Bob's refund path (after timeout)
+        <1260> OP_CHECKSEQUENCEVERIFY OP_DROP
+        OP_DUP OP_HASH160 <bob_pubkeyhash_xyz789> OP_EQUALVERIFY OP_CHECKSIG
+    OP_ENDIF
+    
+
+[SCENARIO 1: Alice claims within 21 minutes]
+Alice's Unlocking Script:
+
+    <alice_valid_signature>
+    <alice_pubkeyhash_abc123>
+    <616c6963655f7365637265745f707265696d616765>
+    OP_TRUE  # Takes the IF branch
+    
+✓ Secret preimage verified successfully!
+✓ Alice's signature verified!
+✓ Alice claims the funds successfully!
+
+[SCENARIO 2: Bob claims refund after 21 minutes]
+Bob's Unlocking Script:
+
+    <bob_valid_signature>
+    <bob_pubkeyhash_xyz789>
+    OP_FALSE  # Takes the ELSE branch
+    
+✓ Timeout of 21 minutes has elapsed!
+✓ Bob's signature verified!
+✓ Bob claims the refund successfully!
+
+[SCENARIO 3: Wrong secret attempt]
+✗ Wrong secret provided!
+✗ OP_EQUALVERIFY fails!
+✗ Transaction REJECTED - funds remain locked!
+
+============================================================
+HTLC Simulation Complete
+============================================================
